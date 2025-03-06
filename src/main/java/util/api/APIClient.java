@@ -35,7 +35,15 @@ public class APIClient {
             return null;
         }
 
-        return response.body();
+        return removeHtmlTagsAndEntities(response.body());
+    }
+
+    private String removeHtmlTagsAndEntities(String body){
+        body = body.replace("<b>", "");
+        body = body.replace("</b>", "");
+        body = body.replace("&quot;", "");
+
+        return body;
     }
 
     private HttpResponse<String> sendRequest(APIClientParam param) throws IOException, InterruptedException {

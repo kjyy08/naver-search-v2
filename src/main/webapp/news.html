@@ -18,22 +18,21 @@
             background-color: #fff;
             padding: 20px;
             border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .news-item {
-            border-bottom: 1px solid #eaeaea;
-            padding: 15px 0;
+        /* 링크 밑줄 제거 및 기본 색상 지정 */
+        a {
+            text-decoration: none;
+            color: #007BFF;
         }
-        .news-item:last-child {
-            border-bottom: none;
+        a:hover {
+            text-decoration: none;
+            color: #0056b3;
         }
-        .pubDate {
-            font-size: 0.9em;
-            color: #999;
-        }
-        /* 스피너 중앙 배치를 위한 추가 스타일 */
-        #spinner {
-            display: none;
+        /* fade-out 애니메이션 (간단 예시) */
+        .fade-out {
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
         }
     </style>
 </head>
@@ -46,13 +45,14 @@
     </div>
     <!-- 스피너 (검색 중에 표시) -->
     <div class="d-flex justify-content-center mb-3">
-        <div id="spinner" class="spinner-border text-primary" role="status">
+        <div id="spinner" class="spinner-border text-primary" role="status" style="display: none;">
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>
-    <ul class="list-unstyled" id="newsList">
-        <!-- 검색 결과가 이곳에 출력됩니다. -->
-    </ul>
+    <!-- 검색 결과 영역 -->
+    <div id="newsList">
+        <!-- 동적으로 생성된 뉴스 카드들이 여기에 추가됩니다. -->
+    </div>
 </div>
 
 <!-- Bootstrap JS Bundle -->
@@ -75,9 +75,12 @@
         spinner.style.display = 'block';
 
         const newsList = document.getElementById('newsList');
-        // 기존 검색 결과에 페이드아웃 애니메이션을 적용 후 초기화
+        // 기존 검색 결과에 페이드아웃 효과를 주고 300ms 후에 내용 초기화
         newsList.classList.add('fade-out');
-        setTimeout(() => newsList.innerHTML = '', 300);
+        setTimeout(() => {
+            newsList.innerHTML = '';
+            newsList.classList.remove('fade-out');
+        }, 300);
 
         fetch(`/search?keyword=${encodeURIComponent(keyword)}`)
             .then(response => {
@@ -90,17 +93,21 @@
                 // 스피너 숨기기
                 spinner.style.display = 'none';
                 if (data.length === 0) {
-                    newsList.innerHTML = '<li class="text-center">검색 결과가 없습니다.</li>';
+                    newsList.innerHTML = '<p class="text-center">검색 결과가 없습니다.</p>';
                     return;
                 }
                 data.forEach(item => {
-                    const li = document.createElement('li');
-                    li.className = 'news-item';
-                    // AOS 애니메이션 속성 추가 (fade-up 효과)
-                    li.setAttribute('data-aos', 'fade-up');
+                    // 부트스트랩 카드 생성
+                    const card = document.createElement('div');
+                    card.className = 'card mb-3';
+                    card.setAttribute('data-aos', 'fade-up');
 
-                    // 제목 (링크가 있을 경우 링크 태그로 감싸기)
-                    const title = document.createElement('h2');
+                    const cardBody = document.createElement('div');
+                    cardBody.className = 'card-body';
+
+                    // 제목 (링크)
+                    const title = document.createElement('h5');
+                    title.className = 'card-title';
                     if (item.link) {
                         const link = document.createElement('a');
                         link.href = item.link;
@@ -110,26 +117,31 @@
                     } else {
                         title.textContent = item.title;
                     }
-                    li.appendChild(title);
+                    cardBody.appendChild(title);
 
-                    // 설명 (description)
+                    // 설명
                     if (item.description) {
                         const description = document.createElement('p');
+                        description.className = 'card-text';
                         description.innerHTML = item.description;
-                        li.appendChild(description);
+                        cardBody.appendChild(description);
                     }
 
-                    // 발행일 (pubDate)
+                    // 발행일
                     if (item.pubDate) {
                         const pubDate = document.createElement('p');
-                        pubDate.className = 'pubDate';
-                        pubDate.textContent = new Date(item.pubDate).toLocaleString();
-                        li.appendChild(pubDate);
+                        pubDate.className = 'card-text';
+                        const small = document.createElement('small');
+                        small.className = 'text-muted';
+                        small.textContent = new Date(item.pubDate).toLocaleString();
+                        pubDate.appendChild(small);
+                        cardBody.appendChild(pubDate);
                     }
 
-                    newsList.appendChild(li);
+                    card.appendChild(cardBody);
+                    newsList.appendChild(card);
                 });
-                // AOS 새로고침: 동적으로 추가된 요소에도 애니메이션이 적용되도록 함
+                // 동적으로 추가된 요소에도 AOS 애니메이션 적용
                 AOS.refresh();
             })
             .catch(error => {
