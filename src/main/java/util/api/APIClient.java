@@ -43,7 +43,7 @@ public class APIClient {
         body = body.replace("</b>", "");
         body = body.replace("&quot;", "");
         body = body.replace("&amp;", "");
-        body = body.replace("\\u003C/b\\u003E", "");
+        body = body.replaceAll("\\\\u[0-9A-Fa-f]{4}", "");
         return body;
     }
 
