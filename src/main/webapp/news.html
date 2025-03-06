@@ -1,55 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>네이버 검색</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>네이버 기사 검색</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- AOS CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
     <style>
-        /* 기본 스타일 */
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
             background-color: #f5f5f5;
         }
-        .container {
+        .container-custom {
             max-width: 800px;
-            margin: 0 auto;
+            margin: 40px auto;
             background-color: #fff;
             padding: 20px;
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        .search-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .search-container input[type="text"] {
-            padding: 10px;
-            width: 60%;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 1em;
-        }
-        .search-container button {
-            padding: 10px 20px;
-            margin-left: 10px;
-            font-size: 1em;
-            color: #fff;
-            background-color: #007BFF;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .search-container button:hover {
-            background-color: #0056b3;
-        }
-        .news-list {
-            list-style: none;
-            padding: 0;
         }
         .news-item {
             border-bottom: 1px solid #eaeaea;
@@ -58,40 +27,42 @@
         .news-item:last-child {
             border-bottom: none;
         }
-        .news-item h2 {
-            margin: 0 0 10px 0;
-            font-size: 1.2em;
-        }
-        .news-item p {
-            margin: 5px 0;
-            line-height: 1.5;
-        }
-        .news-item a {
-            color: #007BFF;
-            text-decoration: none;
-        }
-        .news-item a:hover {
-            text-decoration: underline;
-        }
         .pubDate {
             font-size: 0.9em;
             color: #999;
         }
+        /* 스피너 중앙 배치를 위한 추가 스타일 */
+        #spinner {
+            display: none;
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>네이버 기사 검색</h1>
-    <div class="search-container">
-        <input type="text" id="keyword" placeholder="키워드 입력">
-        <button onclick="searchNews()">검색</button>
+<div class="container container-custom">
+    <h1 class="text-center mb-4">네이버 기사 검색</h1>
+    <div class="d-flex justify-content-center mb-3">
+        <input type="text" id="keyword" class="form-control w-50 me-2" placeholder="키워드 입력">
+        <button class="btn btn-primary" onclick="searchNews()">검색</button>
     </div>
-    <ul class="news-list" id="newsList">
+    <!-- 스피너 (검색 중에 표시) -->
+    <div class="d-flex justify-content-center mb-3">
+        <div id="spinner" class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    <ul class="list-unstyled" id="newsList">
         <!-- 검색 결과가 이곳에 출력됩니다. -->
     </ul>
 </div>
 
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- AOS JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
 <script>
+    // AOS 초기화
+    AOS.init({ duration: 800 });
+
     function searchNews() {
         const keyword = document.getElementById('keyword').value.trim();
         if (!keyword) {
@@ -99,26 +70,34 @@
             return;
         }
 
-        // 이전 결과 초기화
-        const newsList = document.getElementById('newsList');
-        newsList.innerHTML = '';
+        // 스피너 보이기
+        const spinner = document.getElementById('spinner');
+        spinner.style.display = 'block';
 
-        // /search API 호출 (JSON 데이터 반환)
+        const newsList = document.getElementById('newsList');
+        // 기존 검색 결과에 페이드아웃 애니메이션을 적용 후 초기화
+        newsList.classList.add('fade-out');
+        setTimeout(() => newsList.innerHTML = '', 300);
+
         fetch(`/search?keyword=${encodeURIComponent(keyword)}`)
             .then(response => {
                 if (!response.ok) {
-                    throw new Error("Network response was not ok");
+                    throw new Error("네트워크 응답에 문제가 있습니다.");
                 }
                 return response.json();
             })
             .then(data => {
+                // 스피너 숨기기
+                spinner.style.display = 'none';
                 if (data.length === 0) {
-                    newsList.innerHTML = '<li>No results found.</li>';
+                    newsList.innerHTML = '<li class="text-center">검색 결과가 없습니다.</li>';
                     return;
                 }
                 data.forEach(item => {
                     const li = document.createElement('li');
                     li.className = 'news-item';
+                    // AOS 애니메이션 속성 추가 (fade-up 효과)
+                    li.setAttribute('data-aos', 'fade-up');
 
                     // 제목 (링크가 있을 경우 링크 태그로 감싸기)
                     const title = document.createElement('h2');
@@ -150,10 +129,13 @@
 
                     newsList.appendChild(li);
                 });
+                // AOS 새로고침: 동적으로 추가된 요소에도 애니메이션이 적용되도록 함
+                AOS.refresh();
             })
             .catch(error => {
-                console.error("Error fetching news:", error);
-                alert("Failed to fetch news. Please try again later.");
+                spinner.style.display = 'none';
+                console.error("뉴스 가져오기 오류:", error);
+                alert("뉴스를 가져오는데 실패했습니다. 나중에 다시 시도해주세요.");
             });
     }
 </script>
