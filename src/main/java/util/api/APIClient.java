@@ -40,10 +40,10 @@ public class APIClient {
 
     private String removeHtmlTagsAndEntities(String body){
         body = body.replace("<b>", "");
-        body = body.replace("</b>", "");
+        body = body.replace("<\\/b>", "");
         body = body.replace("&quot;", "");
         body = body.replace("&amp;", "");
-        body = body.replaceAll("\\\\u[0-9A-Fa-f]{4}", "");
+        body = body.replace(" +0900", "");
         return body;
     }
 
