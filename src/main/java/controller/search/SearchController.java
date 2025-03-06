@@ -70,4 +70,5 @@ public class SearchController extends HttpServlet {
     private void handleErrorResponse(HttpServletResponse response, Exception e) {
         CustomExceptionHandler.handleErrorResponse(response, e);
     }
+
 }
