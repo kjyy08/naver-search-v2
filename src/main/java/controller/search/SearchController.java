@@ -45,7 +45,7 @@ public class SearchController extends HttpServlet {
         request.getRequestDispatcher("/news.html").forward(request, response);
     }
 
-    private void responseRestApi(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void responseRestApi(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String searchKeyword = request.getParameter("keyword");
         List<NaverAPIResultItem> naverAPIResultItems = searchService.searchByKeyword(searchKeyword);
         String json = createJson(naverAPIResultItems);
