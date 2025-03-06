@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>네이버 검색</title>
+    <style>
+        /* 기본 스타일 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .search-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .search-container input[type="text"] {
+            padding: 10px;
+            width: 60%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        .search-container button {
+            padding: 10px 20px;
+            margin-left: 10px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .search-container button:hover {
+            background-color: #0056b3;
+        }
+        .news-list {
+            list-style: none;
+            padding: 0;
+        }
+        .news-item {
+            border-bottom: 1px solid #eaeaea;
+            padding: 15px 0;
+        }
+        .news-item:last-child {
+            border-bottom: none;
+        }
+        .news-item h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+        }
+        .news-item p {
+            margin: 5px 0;
+            line-height: 1.5;
+        }
+        .news-item a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .news-item a:hover {
+            text-decoration: underline;
+        }
+        .pubDate {
+            font-size: 0.9em;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>네이버 기사 검색</h1>
+    <div class="search-container">
+        <input type="text" id="keyword" placeholder="키워드 입력">
+        <button onclick="searchNews()">검색</button>
+    </div>
+    <ul class="news-list" id="newsList">
+        <!-- 검색 결과가 이곳에 출력됩니다. -->
+    </ul>
+</div>
+
+<script>
+    function searchNews() {
+        const keyword = document.getElementById('keyword').value.trim();
+        if (!keyword) {
+            alert("키워드를 입력해주세요.");
+            return;
+        }
+
+        // 이전 결과 초기화
+        const newsList = document.getElementById('newsList');
+        newsList.innerHTML = '';
+
+        // /search API 호출 (JSON 데이터 반환)
+        fetch(`/search?keyword=${encodeURIComponent(keyword)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.length === 0) {
+                    newsList.innerHTML = '<li>No results found.</li>';
+                    return;
+                }
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'news-item';
+
+                    // 제목 (링크가 있을 경우 링크 태그로 감싸기)
+                    const title = document.createElement('h2');
+                    if (item.link) {
+                        const link = document.createElement('a');
+                        link.href = item.link;
+                        link.textContent = item.title;
+                        link.target = '_blank';
+                        title.appendChild(link);
+                    } else {
+                        title.textContent = item.title;
+                    }
+                    li.appendChild(title);
+
+                    // 설명 (description)
+                    if (item.description) {
+                        const description = document.createElement('p');
+                        description.innerHTML = item.description;
+                        li.appendChild(description);
+                    }
+
+                    // 발행일 (pubDate)
+                    if (item.pubDate) {
+                        const pubDate = document.createElement('p');
+                        pubDate.className = 'pubDate';
+                        pubDate.textContent = new Date(item.pubDate).toLocaleString();
+                        li.appendChild(pubDate);
+                    }
+
+                    newsList.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching news:", error);
+                alert("Failed to fetch news. Please try again later.");
+            });
+    }
+</script>
+</body>
+</html>

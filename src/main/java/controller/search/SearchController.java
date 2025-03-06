@@ -3,6 +3,7 @@ package controller.search;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import exception.handler.CustomExceptionHandler;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +15,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-@WebServlet("/search")
+@WebServlet(urlPatterns = {"/search", "/pages/search/naver"})
 public class SearchController extends HttpServlet {
     private final SearchService searchService;
 
@@ -23,16 +24,32 @@ public class SearchController extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response){
-        String searchKeyword = request.getParameter("keyword");
-
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         try {
-            List<NaverAPIResultItem> naverAPIResultItems = searchService.searchByKeyword(searchKeyword);
-            String json = createJson(naverAPIResultItems);
-            createResponse(response, json);
+            dispatchRequest(request, response);
         } catch (Exception e) {
             handleErrorResponse(response, e);
         }
+    }
+
+    private void dispatchRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String path = request.getServletPath();
+
+        switch (path) {
+            case "/pages/search/naver" -> renderHtml(request, response);
+            case "/search" -> responseRestApi(request, response);
+        }
+    }
+
+    private void renderHtml(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        request.getRequestDispatcher("/news.html").forward(request, response);
+    }
+
+    private void responseRestApi(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String searchKeyword = request.getParameter("keyword");
+        List<NaverAPIResultItem> naverAPIResultItems = searchService.searchByKeyword(searchKeyword);
+        String json = createJson(naverAPIResultItems);
+        createResponse(response, json);
     }
 
     private String createJson(List<NaverAPIResultItem> naverAPIResultItems) throws JsonProcessingException {
