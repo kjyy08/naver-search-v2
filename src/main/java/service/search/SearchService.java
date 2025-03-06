@@ -100,4 +100,5 @@ public class SearchService {
     private void handleApiError(Exception e) {
         CustomExceptionHandler.handleApiError(e);
     }
+
 }

@@ -37,4 +37,5 @@ public class CustomLogger {
         record.setSourceClassName(logger.getName());
         logger.log(record);
     }
+
 }

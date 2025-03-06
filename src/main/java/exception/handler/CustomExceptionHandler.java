@@ -38,4 +38,5 @@ public class CustomExceptionHandler {
             logger.severe("Unexpected error occurred: %s".formatted(e.getMessage()));
         }
     }
+
 }
