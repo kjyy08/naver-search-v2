@@ -1,7 +1,6 @@
 package controller.search;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
+import exception.handler.CustomExceptionHandler;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,37 +8,37 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.dto.NaverAPIResultItem;
 import service.search.SearchService;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.List;
 
-@WebServlet("/search")
+@WebServlet("/")
 public class SearchController extends HttpServlet {
+    private final SearchService searchService;
+
+    public SearchController() {
+        this.searchService = new SearchService();
+    }
+
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String searchKeyword = req.getParameter("keyword");
-        String json;
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        String searchKeyword = request.getParameter("keyword");
+
         try {
-            SearchService searchService = new SearchService();
-            List<NaverAPIResultItem> result = searchService.searchByKeyword(searchKeyword);
-            ObjectMapper objectMapper = new ObjectMapper();
-            json = objectMapper.writeValueAsString(result);
+            // SearchService를 통해 결과를 가져옵니다.
+            List<NaverAPIResultItem> naverAPIResultItems = searchService.searchByKeyword(searchKeyword);
+
+            // 검색 결과를 request에 추가합니다.
+            request.setAttribute("searchResults", naverAPIResultItems);
+            request.setAttribute("keyword", searchKeyword);
+
+            // 결과를 naver.jsp로 전달합니다.
+            request.getRequestDispatcher("/WEB-INF/views/naver.jsp").forward(request, response);
         } catch (Exception e) {
-            resp.sendError(500);
-            json = """
-                    {
-                    "error": "%s"
-                    }
-                    """.formatted(e.getMessage());
+            handleErrorResponse(response, e);
         }
+    }
 
-        // 응답 설정
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
-        // JSON 응답 전송
-        PrintWriter out = resp.getWriter();
-        out.print(json);
-        out.flush();
+    private void handleErrorResponse(HttpServletResponse response, Exception e) {
+        CustomExceptionHandler.handleErrorResponse(response, e);
     }
 }
+
